@@ -55,21 +55,21 @@ A secure and flexible smart contract for managing document verification on the S
 
 ## Document States
 
-- **PENDING**: Initial state after document submission
-- **VERIFIED**: Final state after successful verification
+- **DOCUMENT_STATUS_PENDING**: Initial state after document submission
+- **DOCUMENT_STATUS_VERIFIED**: Final state after successful verification
 
 ## Error Codes
 
-- `ERROR-OWNER-ACCESS-DENIED (u100)`: Unauthorized access attempt
-- `ERROR-DOCUMENT-ALREADY-EXISTS (u101)`: Duplicate document submission
-- `ERROR-DOCUMENT-LOOKUP-FAILED (u102)`: Document not found
-- `ERROR-VERIFICATION-ALREADY-COMPLETE (u103)`: Attempt to modify verified document
-- `ERROR-INVALID-HASH-FORMAT (u104)`: Invalid document hash format
-- `ERROR-INVALID-CONTENT-HASH (u105)`: Invalid content hash
-- `ERROR-INVALID-METADATA-FORMAT (u106)`: Invalid metadata format
-- `ERROR-INVALID-VERIFIER-ADDRESS (u107)`: Invalid verifier address
-- `ERROR-INVALID-INPUT-PARAMETER (u108)`: Invalid input parameters
-- `ERROR-PERMISSION-DENIED (u109)`: Insufficient permissions
+- `ERR_OWNER_ACCESS_DENIED (u100)`: Unauthorized access attempt
+- `ERR_DOCUMENT_ALREADY_EXISTS (u101)`: Duplicate document submission
+- `ERR_DOCUMENT_LOOKUP_FAILED (u102)`: Document not found
+- `ERR_VERIFICATION_ALREADY_COMPLETE (u103)`: Attempt to modify verified document
+- `ERR_INVALID_HASH_FORMAT (u104)`: Invalid document hash format
+- `ERR_INVALID_CONTENT_HASH (u105)`: Invalid content hash
+- `ERR_INVALID_METADATA_FORMAT (u106)`: Invalid metadata format
+- `ERR_INVALID_VERIFIER_ADDRESS (u107)`: Invalid verifier address
+- `ERR_INVALID_INPUT_PARAMETER (u108)`: Invalid input parameters
+- `ERR_PERMISSION_DENIED (u109)`: Insufficient permissions
 
 ## Security Features
 

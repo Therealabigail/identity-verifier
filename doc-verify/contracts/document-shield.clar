@@ -1,20 +1,20 @@
 ;; Document Verification Smart Contract
 
 ;; Error codes
-(define-constant ERROR-OWNER-ACCESS-DENIED (err u100))
-(define-constant ERROR-DOCUMENT-ALREADY-EXISTS (err u101))
-(define-constant ERROR-DOCUMENT-LOOKUP-FAILED (err u102))
-(define-constant ERROR-VERIFICATION-ALREADY-COMPLETE (err u103))
-(define-constant ERROR-INVALID-HASH-FORMAT (err u104))
-(define-constant ERROR-INVALID-CONTENT-HASH (err u105))
-(define-constant ERROR-INVALID-METADATA-FORMAT (err u106))
-(define-constant ERROR-INVALID-VERIFIER-ADDRESS (err u107))
-(define-constant ERROR-INVALID-INPUT-PARAMETER (err u108))
-(define-constant ERROR-PERMISSION-DENIED (err u109))
+(define-constant ERR_OWNER_ACCESS_DENIED (err u100))
+(define-constant ERR_DOCUMENT_ALREADY_EXISTS (err u101))
+(define-constant ERR_DOCUMENT_LOOKUP_FAILED (err u102))
+(define-constant ERR_VERIFICATION_ALREADY_COMPLETE (err u103))
+(define-constant ERR_INVALID_HASH_FORMAT (err u104))
+(define-constant ERR_INVALID_CONTENT_HASH (err u105))
+(define-constant ERR_INVALID_METADATA_FORMAT (err u106))
+(define-constant ERR_INVALID_VERIFIER_ADDRESS (err u107))
+(define-constant ERR_INVALID_INPUT_PARAMETER (err u108))
+(define-constant ERR_PERMISSION_DENIED (err u109))
 
 ;; Constants for verification status
-(define-constant DOCUMENT-STATUS-PENDING "PENDING")
-(define-constant DOCUMENT-STATUS-VERIFIED "VERIFIED")
+(define-constant DOCUMENT_STATUS_PENDING "PENDING")
+(define-constant DOCUMENT_STATUS_VERIFIED "VERIFIED")
 
 ;; Define document record structure
 (define-data-var document-template 
@@ -32,7 +32,7 @@
         document-owner: tx-sender,
         document-content-hash: 0x0000000000000000000000000000000000000000000000000000000000000000,
         submission-timestamp: u0,
-        verification-status: DOCUMENT-STATUS-PENDING,
+        verification-status: DOCUMENT_STATUS_PENDING,
         document-verifier: none,
         document-metadata: u"",
         document-version: u0,
@@ -64,27 +64,27 @@
 (define-private (validate-document-unique-hash (unique-hash-input (buff 32)))
     (if (is-eq (len unique-hash-input) u32)
         (ok unique-hash-input)
-        ERROR-INVALID-INPUT-PARAMETER))
+        ERR_INVALID_INPUT_PARAMETER))
 
 (define-private (validate-document-metadata-content (metadata-input (string-utf8 256)))
     (if (and (<= (len metadata-input) u256) (> (len metadata-input) u0))
         (ok metadata-input)
-        ERROR-INVALID-INPUT-PARAMETER))
+        ERR_INVALID_INPUT_PARAMETER))
 
 (define-private (validate-verifier-address (verifier-address-input principal))
     (if (and 
         (not (is-eq verifier-address-input tx-sender))
         (not (is-eq verifier-address-input (as-contract tx-sender))))
         (ok verifier-address-input)
-        ERROR-INVALID-VERIFIER-ADDRESS))
+        ERR_INVALID_VERIFIER_ADDRESS))
 
 ;; Safe getter with error handling
 (define-private (retrieve-document-record (document-unique-hash (buff 32)))
     (match (validate-document-unique-hash document-unique-hash)
         validated-unique-hash (match (map-get? verified-documents { document-unique-hash: validated-unique-hash })
             document-record (ok document-record)
-            ERROR-DOCUMENT-LOOKUP-FAILED)
-        error ERROR-INVALID-HASH-FORMAT))
+            ERR_DOCUMENT_LOOKUP_FAILED)
+        error ERR_INVALID_HASH_FORMAT))
 
 ;; Read-only functions with validation
 (define-read-only (get-document-details (document-unique-hash (buff 32)))
@@ -97,8 +97,8 @@
                 { document-unique-hash: validated-unique-hash, verifier-address: validated-verifier-address })
                 permission-status (ok permission-status)
                 (ok { has-view-access: false, has-verification-rights: false }))
-            error ERROR-INVALID-VERIFIER-ADDRESS)
-        error ERROR-INVALID-HASH-FORMAT))
+            error ERR_INVALID_VERIFIER_ADDRESS)
+        error ERR_INVALID_HASH_FORMAT))
 
 ;; Public functions with security
 (define-public (submit-new-document 
@@ -110,22 +110,22 @@
             validated-content-hash (match (validate-document-metadata-content document-metadata-content)
                 validated-metadata-content 
                 (match (map-get? verified-documents { document-unique-hash: validated-unique-hash })
-                    existing-document-record ERROR-DOCUMENT-ALREADY-EXISTS
+                    existing-document-record ERR_DOCUMENT_ALREADY_EXISTS
                     (ok (map-set verified-documents
                         { document-unique-hash: validated-unique-hash }
                         {
                             document-owner: tx-sender,
                             document-content-hash: validated-content-hash,
                             submission-timestamp: block-height,
-                            verification-status: DOCUMENT-STATUS-PENDING,
+                            verification-status: DOCUMENT_STATUS_PENDING,
                             document-verifier: none,
                             document-metadata: validated-metadata-content,
                             document-version: u1,
                             verification-completed: false
                         })))
-                error ERROR-INVALID-METADATA-FORMAT)
-            error ERROR-INVALID-CONTENT-HASH)
-        error ERROR-INVALID-HASH-FORMAT))
+                error ERR_INVALID_METADATA_FORMAT)
+            error ERR_INVALID_CONTENT_HASH)
+        error ERR_INVALID_HASH_FORMAT))
 
 (define-public (update-document-content
     (document-unique-hash (buff 32))
@@ -151,12 +151,12 @@
                                         document-version: (+ (get document-version existing-document-record) u1),
                                         verification-completed: false
                                     })))
-                            ERROR-VERIFICATION-ALREADY-COMPLETE)
-                        ERROR-OWNER-ACCESS-DENIED)
-                    error ERROR-INVALID-METADATA-FORMAT)
-                error ERROR-INVALID-CONTENT-HASH)
-            error ERROR-DOCUMENT-LOOKUP-FAILED)
-        error ERROR-INVALID-HASH-FORMAT))
+                            ERR_VERIFICATION_ALREADY_COMPLETE)
+                        ERR_OWNER_ACCESS_DENIED)
+                    error ERR_INVALID_METADATA_FORMAT)
+                error ERR_INVALID_CONTENT_HASH)
+            error ERR_DOCUMENT_LOOKUP_FAILED)
+        error ERR_INVALID_HASH_FORMAT))
 
 (define-public (mark-document-verified
     (document-unique-hash (buff 32)))
@@ -172,15 +172,15 @@
                             { document-unique-hash: validated-unique-hash }
                             (merge existing-document-record
                                 {
-                                    verification-status: DOCUMENT-STATUS-VERIFIED,
+                                    verification-status: DOCUMENT_STATUS_VERIFIED,
                                     document-verifier: (some tx-sender),
                                     verification-completed: true
                                 })))
-                        ERROR-VERIFICATION-ALREADY-COMPLETE)
-                    ERROR-PERMISSION-DENIED)
-                error ERROR-PERMISSION-DENIED)
-            error ERROR-DOCUMENT-LOOKUP-FAILED)
-        error ERROR-INVALID-HASH-FORMAT))
+                        ERR_VERIFICATION_ALREADY_COMPLETE)
+                    ERR_PERMISSION_DENIED)
+                error ERR_PERMISSION_DENIED)
+            error ERR_DOCUMENT_LOOKUP_FAILED)
+        error ERR_INVALID_HASH_FORMAT))
 
 (define-public (set-verifier-access-rights
     (document-unique-hash (buff 32))
@@ -200,10 +200,10 @@
                             has-view-access: grant-view-access, 
                             has-verification-rights: grant-verification-rights 
                         }))
-                    ERROR-OWNER-ACCESS-DENIED)
-                error ERROR-INVALID-VERIFIER-ADDRESS)
-            error ERROR-DOCUMENT-LOOKUP-FAILED)
-        error ERROR-INVALID-HASH-FORMAT))
+                    ERR_OWNER_ACCESS_DENIED)
+                error ERR_INVALID_VERIFIER_ADDRESS)
+            error ERR_DOCUMENT_LOOKUP_FAILED)
+        error ERR_INVALID_HASH_FORMAT))
 
 (define-public (remove-verifier-access-rights
     (document-unique-hash (buff 32))
@@ -217,7 +217,7 @@
                 (if (is-eq (get document-owner existing-document-record) tx-sender)
                     (ok (map-delete document-permissions
                         { document-unique-hash: validated-unique-hash, verifier-address: validated-verifier-address }))
-                    ERROR-OWNER-ACCESS-DENIED)
-                error ERROR-INVALID-VERIFIER-ADDRESS)
-            error ERROR-DOCUMENT-LOOKUP-FAILED)
-        error ERROR-INVALID-HASH-FORMAT))
+                    ERR_OWNER_ACCESS_DENIED)
+                error ERR_INVALID_VERIFIER_ADDRESS)
+            error ERR_DOCUMENT_LOOKUP_FAILED)
+        error ERR_INVALID_HASH_FORMAT))
